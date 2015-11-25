@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+      <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+      <meta name="viewport" content="width=device-width, height=device-height, initial-scale=0.65, user-scalable=yes">
+      <title>px4ControlGui</title>
+      <script type="text/javascript" src="js/eventemitter2.min.js"></script>
+      <script type="text/javascript" src="js/mjpegcanvas.min.js"></script>
+      <script type="text/javascript" src="js/roslib.min.js"></script>
+      <script type="text/javascript" src="js/px4Gui.js"></script>
+      <script type="text/javascript">
+function init() {
+	var readyStateCheckInterval = setInterval(function() {
+		if (document.readyState === "complete") {
+		          init();
+		          clearInterval(readyStateCheckInterval);
+		}
+            }, 100);
+}
+	</script>
+
+<style type="text/css">
+
+body{
+	padding: 0;
+	margin: 0;
+}
+.panel{
+	overflow: hidden;
+	height: 1000px;
+}
+.left{
+	width: 100%;
+	float: left;
+	margin-left: -310px;
+	height: 100%;
+}
+.left-panel{
+	margin-left: 340px;
+	position: relative;
+}
+.control{
+	/*position: absolute;*/
+	margin-bottom: 40px;
+
+}
+.right-panel{
+	float: right;
+	width: 300px;
+	height: 100%;
+	/*margin-left: -100%;*/
+}
+.takeoff{
+	background-color: green;
+	display: inline;
+	/*width: 200px;*/
+	padding: 2%;
+	margin: 2%;
+	cursor: pointer;
+}
+.landing{
+	background-color: red;
+	display: inline;
+	/*width: 200px;*/
+	padding: 2%;
+	margin: 2%;
+	cursor: pointer;
+}
+</style>
+</head>
+<body onload="init();init_ros();">
+<div class="panel">
+	<div class="right-panel">
+		<div style="white-space: nowrap; vertical-align: middle; text-align: center; margin-left: 10px; margin-top:50px;">
+	                  Server Hostname or IP: <input type="text" id="rosbridgeHost" value=""><br> Port: <input
+	                    type="text" id="rosbridgePort" size="5" value="">&nbsp;<nobr />
+	                  Connect:&nbsp;<input id="connectROS" type="checkbox" class="checkbox" checked
+	                    onClick="connectDisconnect();">
+	                </div>
+		<table style="font-size: 20px;">
+			<tr>
+			  <td>lat</td>
+			  <td id="lat">200</td>
+			</tr>
+			<tr>
+			  <td>lon</td>
+			  <td id="lon">500</td>
+			</tr>
+			<tr>
+			  <td>alt</td>
+			  <td id="alt">500</td>
+			</tr>
+			<tr>
+			  <td>set_vx</td>
+			  <td id="vx">500</td>
+			</tr>
+			<tr>
+			  <td>set_vy</td>
+			  <td id="vy">500</td>
+			</tr>
+			<tr>
+			  <td>set_vz</td>
+			  <td id="vz">500</td>
+			</tr>
+		</table>
+	</div>
+	<div class="left">
+		<div class="left-panel">
+			<h2 style="margin-left:50px;">ROS Remote Control</h2>
+			<div class="control" style="text-align:center;border:1px solid red">
+				<p>velocity control</p>
+				<div><img src="images/arrow-up.jpg" width="100" align="middle"  onClick="setSpeed('forward');"></div>
+				<div><img src="images/arrow-left.jpg" width="100" align="middle"  onClick="setSpeed('left');"><img src="images/stop.jpg" width="100" align="middle" onClick="stopRobot('forward');"><img src="images/arrow-right.jpg" width="100" align="middle"  onClick="setSpeed('right');"></div>
+				<div><img src="images/arrow-down.jpg" width="100" align="middle" onClick="setSpeed('backward');"></div>
+				<!-- up down -->
+				<p>up and down</p>
+				<div><img src="images/arrow-up.jpg" width="100" align="middle" onClick="setSpeed('up');"><img src="images/arrow-down.jpg" width="100" align="middle" onClick="setSpeed('down');"></div>
+			</div>
+			<div style="margin: 0 auto;">
+				<p style="" onClick="armingBtn()" class="takeoff">ARMING</p>
+				<p style="" onClick="landingBtn()" class="landing">disarm</p>
+				<p style="" onClick="takeoffBtn()" class="takeoff">takeoff</p>
+				<p style="" onClick="landingBtn()" class="landing">landing</p>
+			</div>
+			<div style="text-align:center;border:1px solid red;margin-top:30px; font-size: 20px;padding-bottom: 20px;">
+			<br>
+				<p>set point flying</p>
+				lon:<input type="text" id="setPointLon" value="">
+				lat: <input type="text" id="setPointLat" value="">
+				<span style="background-color:green; padding:4px; cursor: pointer;" onClick="setPoint()">flying</span>
+			</div>
+			<div class="gradientControl" style="text-align:center;border:1px solid red; margin-top:30px;font-size: 20px; padding-bottom: 20px;">
+				<p>multiDrone-gradientControl</p>
+				<p class="start" style="width: 20%; margin: 0 auto; background-color: green; cursor: pointer;" onClick="">start</p>
+			</div>
+		</div>
+	</div>
+	<div class="map">
+		
+	</div>
+</div>
+</body>
+</html>

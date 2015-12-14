@@ -10,11 +10,19 @@ var mjpegPort = "8080";
 thisHostName = document.location.hostname;
 // Set the rosbridge and mjpeg server hostname accordingly
 var rosbridgeHost = thisHostName;
+var mjpegHost = thisHostName;
 // Build the websocket URL to the rosbride server
 var serverURL = "ws://" + rosbridgeHost + ":" + rosbridgePort;
+
+//camera node
+var mjpegViewer;
+
 // The default video topic (can be set in the rosbridge launch file)
+// var videoTopic = "/image_raw";
+var videoTopic = "/camera/rgb/image_raw";
 var globalTopic = "/mavros/global_position/raw/fix";
 var globalPositionTopic;
+var videoQuality = 50;
 // The topic on which to publish Twist messages
 var cmdVelTopic = "/mavros/setpoint_velocity/cmd_vel";
 // The ROS namespace containing parameters for this script
@@ -29,6 +37,14 @@ var shiftKey = false;
 
 // The rate in Hz for the main ROS publisher loop
 var rate = 5;
+// Get the current window width and height
+var windowWidth = this.window.innerWidth;
+var windowHeight = this.window.innerHeight;
+
+// Set the video width to 1/2 of the window width and scale the height
+// appropriately.
+var videoWidth = Math.round(windowWidth / 2.0);
+var videoHeight = Math.round(videoWidth * 240 / 320);
 //The main ROS object
 var ros = new ROSLIB.Ros();
 
@@ -45,6 +61,9 @@ var vz_click_increment = 0.1;
 var currentLon = 0.0;
 var currentLat = 0.0;
 var currentAlt = 0.0;
+var time;
+
+
 
 //earth radius
 var R = 6371000;
@@ -66,6 +85,32 @@ ros.on('error', function(error) {
 ros.on('connection', function() {
 	console.log('Rosbridge connected.');
 	
+	// Create a Param object for the video topic
+	var videoTopicParam = new ROSLIB.Param({
+		ros : ros,
+		name : param_ns + '/videoTopic'
+	});
+
+	videoTopicParam.get(function(value) {
+	    if (value != null) {
+		videoTopic = value;
+	    }
+		
+	    // Create the video viewer
+	    if (!mjpegViewer) {
+		mjpegViewer = new MJPEGCANVAS.Viewer({
+		    divID : 'videoCanvas',
+		    host : mjpegHost,
+		    port : mjpegPort,
+		    width : videoWidth,
+		    height : videoHeight,
+		    quality : videoQuality,
+		    topic : videoTopic
+		});
+	    }
+	});
+
+
 	//subcribe a topic gps topic
 	globalPositionTopic = new ROSLIB.Topic({
 		ros : ros,
@@ -98,9 +143,17 @@ ros.on('connection', function() {
 		}
 	}, true);	
 
+	//baidu map point 
+
+	// map.add
 	// Start the publisher loop
+	var dronePosition = new BMap.Point(currentLon, currentLat);
+	window.droneMark = new BMap.Marker(dronePosition,{icon:myIcon});
+	map.addOverlay(droneMark);
+
+	showGPSPoint();
 	console.log("Starting publishers");
-	pubHandle = setInterval(refreshPublishers, 1000 / rate);
+	// pubHandle = setInterval(refreshPublishers, 1000 / rate);
 
 });
 
@@ -112,6 +165,18 @@ var cmdVelPub = new ROSLIB.Topic({
 });
 
 
+// baidu map  settimeout 
+function showGPSPoint () {
+	// body...
+	// var dronePosition = new BMap.Point(120.130843, 30.270973);
+	var dronePosition = new BMap.Point(currentLon, currentLat);
+	//var droneMark = new BMap.Marker(dronePosition,{icon:myIcon});
+	// map.addOverlay(droneMark);
+	// dronePosition = new BMap.Point(120.130859, 30.270989);
+	window.droneMark.setPosition(dronePosition)
+	// map.addOverlay(droneMark);
+	time = setTimeout("showGPSPoint()", 1000);
+}
 // Speed control using the arrow keys or icons
 function setSpeed(code) {
 	// Stop if the deadman key (Shift) is not depressed
@@ -286,8 +351,8 @@ function setPoint() {
 		console.log(setPointLon);
 		console.log(setPointLat);
 		while(true){
-			var delta_x = R * (lat - currentLat) * (3.1415926535898 / 180);
-			var delta_y = R * (lon - currentLon) * (3.1415926535898 / 180);
+			var delta_x = R * (setPointLat - currentLat) * (3.1415926535898 / 180);
+			var delta_y = R * (setPointLon - currentLon) * (3.1415926535898 / 180);
 			vx = delta_x*0.1;;
 			vy = -delta_y*0.1;
 			vz = 0;
